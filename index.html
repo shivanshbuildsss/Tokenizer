@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kotoba Lens 言葉レンズ – tokens, vocabulary and 3D graphs</title>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Maru+Gothic:wght@400;700;900&family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#150B33;--p1:#1F1147;--p2:#2D1B66;--ink:#FFF6E9;--mute:#B7A9E6;--sakura:#FF6FB5;--cyan:#36F1E0;--sun:#FFD84D;--red:#FF4B4B;--violet:#8B6CFF;--matcha:#9BE564;--dark:#1A0E3D;
+--head:"Dela Gothic One","Zen Maru Gothic",system-ui,sans-serif;--ui:"Zen Maru Gothic",system-ui,sans-serif;--px:"DotGothic16",ui-monospace,monospace}
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink);font:500 16px/1.55 var(--ui);background-color:var(--bg);
+background-image:radial-gradient(circle at 50% 100%,transparent 0 27%,rgba(139,108,255,.22) 28% 31%,transparent 32% 43%,rgba(139,108,255,.16) 44% 47%,transparent 48%);background-size:64px 32px}
+main{max-width:1120px;margin:0 auto;padding:30px 20px 70px;position:relative}
+.hero{position:relative;padding:20px 0 26px;min-height:230px}
+.sun{position:absolute;right:2%;top:0;width:min(300px,52vw);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,var(--dark) 18%,transparent 19%) 0 0/12px 12px,var(--red);box-shadow:0 0 0 12px rgba(255,75,75,.22),0 0 0 26px rgba(255,111,181,.12)}
+.brand{font:400 15px var(--px);color:var(--cyan);margin:0 0 10px}
+h1{position:relative;font:400 clamp(36px,7vw,72px)/1.05 var(--head);margin:0 0 14px;max-width:11ch;text-shadow:4px 4px 0 var(--sakura)}
+.sub{position:relative;max-width:52ch;color:var(--mute);margin:0}
+.vert{position:absolute;right:-6px;top:6px;writing-mode:vertical-rl;font:400 22px var(--px);color:var(--sun);letter-spacing:.3em}
+textarea{width:100%;min-height:120px;resize:vertical;padding:16px;border:3px solid var(--cyan);border-radius:14px;background:var(--ink);color:var(--dark);font:700 18px/1.5 var(--ui);box-shadow:6px 6px 0 var(--violet)}
+:focus-visible{outline:3px solid var(--sun);outline-offset:3px}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin:20px 0}
+select,input[type=search]{padding:9px 12px;border:3px solid var(--dark);border-radius:10px;background:var(--ink);color:var(--dark);font:700 15px var(--ui)}
+label{display:flex;gap:8px;align-items:center;font-size:15px;color:var(--ink)}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--sakura)}
+.btn{border:3px solid var(--dark);background:var(--sun);color:var(--dark);border-radius:10px;padding:8px 16px;font:900 14px var(--ui);cursor:pointer;box-shadow:3px 3px 0 var(--dark)}
+.btn:hover{transform:translate(-1px,-1px)}
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:26px}
+.flow div{background:var(--p2);border:3px solid var(--ink);border-radius:12px;padding:10px 14px;position:relative}
+.flow div:not(:last-child)::after{content:"▶";position:absolute;right:-17px;top:50%;transform:translateY(-50%);color:var(--sakura);font-size:14px;z-index:1}
+.flow small{display:block;color:var(--mute);font-size:13px}
+.flow em,.tabs em{font-style:normal;font-family:var(--px);color:var(--sakura);margin-left:6px}
+.flow b{font:400 24px var(--px);color:var(--cyan)}
+.tabs{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+.tabs button{border:3px solid var(--ink);border-radius:999px;background:var(--p1);color:var(--ink);padding:10px 22px;font:900 16px var(--ui);cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--sun);color:var(--dark);border-color:var(--dark);box-shadow:4px 4px 0 var(--sakura)}
+.tabs button[aria-selected=true] em{color:var(--red)}
+.panel{background:var(--p1);border:3px solid var(--ink);border-radius:18px;padding:22px;box-shadow:8px 8px 0 var(--sakura)}
+.panel[hidden]{display:none}
+h2{font:400 21px var(--head);margin:0 0 12px;color:var(--sun)}
+h2 em{font:400 15px var(--px);font-style:normal;color:var(--cyan);margin-left:8px}
+.two{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:24px}
+.toks{display:flex;flex-wrap:wrap;gap:8px}
+.t{display:inline-flex;flex-direction:column;align-items:center;padding:5px 10px;border-radius:10px;color:var(--dark);border:2px solid var(--dark);box-shadow:2px 2px 0 rgba(0,0,0,.45)}
+.t b{font:900 15px var(--ui);white-space:pre}
+.t i{font:400 12px var(--px);font-style:normal;opacity:.75}
+.t small{font:700 11px var(--ui)}
+.fn{color:var(--ink)}
+.out{font:500 15px/1.6 var(--ui);background:var(--bg);border:2px dashed var(--violet);padding:12px;border-radius:10px;word-break:break-word;margin-bottom:14px;white-space:pre-line}
+dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:15px}
+dt{color:var(--mute)}dd{margin:0;font:400 16px var(--px);color:var(--cyan);word-break:break-all}
+.ids{font:400 14px/1.5 var(--px);color:var(--mute);margin-top:14px;word-break:break-all}
+.empty{color:var(--mute)}
+.vbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:14px}
+.vwrap{max-height:480px;overflow:auto;border:3px solid var(--ink);border-radius:12px}
+table{width:100%;border-collapse:collapse}
+th{position:sticky;top:0;background:var(--sakura);color:var(--dark);text-align:left;padding:9px 12px;font-weight:900}
+td{padding:6px 12px;border-top:1px solid var(--p2)}
+tr:nth-child(even) td{background:rgba(139,108,255,.08)}
+td.m{font:400 16px var(--px)}
+.share{display:inline-block;height:9px;background:var(--cyan);border-radius:5px;vertical-align:middle;margin-right:8px}
+.graphs{display:grid;gap:30px}
+canvas{width:100%;height:470px;display:block;background:radial-gradient(circle at 50% 40%,#2D1B66,var(--bg) 75%);border:3px solid var(--ink);border-radius:14px;cursor:grab;touch-action:none}
+canvas:active{cursor:grabbing}
+.gnote{color:var(--mute);font-size:14px;margin:0 0 10px}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--ink);font:400 13px var(--px)}
+@media(max-width:760px){.two{grid-template-columns:1fr}.flow{grid-template-columns:1fr 1fr}.flow div::after{display:none}.vert{display:none}canvas{height:380px}}
+</style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <div class="sun" aria-hidden="true"></div>
+    <div class="vert" aria-hidden="true">言葉を分解する</div>
+    <p class="brand">言葉レンズ · Kotoba Lens</p>
+    <h1>See your words as tokens.</h1>
+    <p class="sub">Write anything. It gets cleaned, split into tokens, given IDs from a vocabulary, and drawn as a 3D graph you can spin.</p>
+  </header>
+
+  <label for="inp" style="position:absolute;left:-9999px">Your text</label>
+  <textarea id="inp" spellcheck="false">The cat sat on the mat. The dog sat on the log. Then the cat and the dog ran, and the mat stayed where the log was. Language models read text as tokens, and every token gets an ID from a vocabulary.</textarea>
+
+  <div class="bar">
+    <select id="algo" aria-label="Tokenizer">
+      <option value="sub">Subword (WordPiece style)</option>
+      <option value="word">Words and punctuation</option>
+      <option value="mean">Meaning units</option>
+      <option value="char">Characters</option>
+      <option value="byte">UTF-8 bytes</option>
+    </select>
+    <label><input type="checkbox" id="low" checked> Lowercase first</label>
+    <label><input type="checkbox" id="spec" checked> Add special tokens</label>
+    <label>Graph window <select id="win"><option>1</option><option selected>2</option><option>3</option><option>4</option></select></label>
+  </div>
+
+  <div class="flow" aria-label="Pipeline">
+    <div><small>Input chars<em>入力</em></small><b id="s1">0</b></div>
+    <div><small>Cleaned chars<em>正規化</em></small><b id="s2">0</b></div>
+    <div><small>Tokens<em>トークン</em></small><b id="s3">0</b></div>
+    <div><small>Vocabulary size<em>語彙</em></small><b id="s4">0</b></div>
+    <div><small>Decoded<em>出力</em></small><b id="s5">–</b></div>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tb0" aria-selected="true" aria-controls="p0">Tokens<em>トークン</em></button>
+    <button role="tab" id="tb1" aria-selected="false" aria-controls="p1">Vocabulary<em>語彙</em></button>
+    <button role="tab" id="tb2" aria-selected="false" aria-controls="p2">3D Graph<em>グラフ</em></button>
+  </div>
+
+  <div class="panel" id="p0" role="tabpanel" aria-labelledby="tb0">
+    <div class="two">
+      <div><h2>Tokens with IDs</h2><div class="toks" id="toks" aria-live="polite"></div><div class="ids" id="ids"></div><button class="btn" id="copy" style="margin-top:14px">Copy ID list</button></div>
+      <div><h2>Decoded output</h2><div class="out" id="out"></div><dl id="stats"></dl></div>
+    </div>
+  </div>
+
+  <div class="panel" id="p1" role="tabpanel" aria-labelledby="tb1" hidden>
+    <div class="vbar">
+      <label>Sort <select id="sort"><option value="count">Frequency</option><option value="alpha">Alphabetical</option><option value="id">ID</option></select></label>
+      <input type="search" id="filter" placeholder="Filter tokens" aria-label="Filter tokens">
+      <button class="btn" id="csv">Download CSV</button>
+      <span class="empty" id="vcount"></span>
+    </div>
+    <div class="vwrap"><table><thead><tr><th>ID</th><th>Token</th><th>Count</th><th>Share</th></tr></thead><tbody id="vbody"></tbody></table></div>
+  </div>
+
+  <div class="panel" id="p2" role="tabpanel" aria-labelledby="tb2" hidden>
+    <div class="graphs">
+      <div><h2>Token network<em>ネットワーク</em></h2><p class="gnote">Drag to rotate, scroll to zoom, hover a node. Bigger node = more frequent. A line joins tokens that appear near each other.</p><canvas id="c1" aria-label="3D token network graph"></canvas></div>
+      <div><h2>Frequency towers<em>頻度</em></h2><p class="gnote">The 12 most frequent tokens. Taller tower = more occurrences. Drag to rotate.</p><canvas id="c2" aria-label="3D frequency towers"></canvas></div>
+      <div><h2>Token length<em>長さ</em></h2><div id="g3"></div></div>
+      <div><button class="btn" id="spin">Pause / resume rotation</button></div>
+    </div>
+  </div>
+</main>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const vis=t=>t.replace(/ /g,"␣").replace(/\n/g,"↵");
+const hash=t=>{let h=2166136261;for(const c of t){h^=c.codePointAt(0);h=Math.imul(h,16777619)}return h>>>0};
+const PAL=[[333,100,72],[174,90,60],[48,100,66],[2,100,68],[255,100,76],[92,70,64]];
+const col=(k,dl=0)=>{const p=PAL[hash(k)%6];return `hsl(${p[0]} ${p[1]}% ${p[2]+dl}%)`};
+
+/* ---- Normalize ---- */
+const normalize=(t,low)=>{t=t.normalize("NFKC").replace(/\s+/g," ").trim();return low?t.toLowerCase():t};
+
+/* ---- Tokenizers ---- */
+const WORD=/[\p{L}\p{N}]+(?:['’][\p{L}]+)?|[^\s\p{L}\p{N}]/gu;
+const PRE=["under","over","anti","inter","non","dis","pre","sub","out","un","re","in"];
+const SUF=["ation","ments","ment","ness","able","less","ful","ous","ive","tion","ing","est","ly","ed","er","es","s"];
+function subword(w){
+  if(w.length<=4||!/^\p{L}+$/u.test(w))return [w];
+  const lw=w.toLowerCase();let pre="",suf="";
+  for(const p of PRE)if(lw.startsWith(p)&&w.length-p.length>=3){pre=w.slice(0,p.length);break}
+  let rest=w.slice(pre.length);
+  for(const s of SUF)if(rest.toLowerCase().endsWith(s)&&rest.length-s.length>=3){suf=rest.slice(rest.length-s.length);rest=rest.slice(0,rest.length-s.length);break}
+  return [pre,rest,suf].filter(Boolean).map((p,i)=>i?"##"+p:p);
+}
+const STOP=new Set("a an the and or but if of to in on at by for with from as is are was were be been am it its this that these those i you he she we they me my your our their so than then too very can will just should would could might must how what why when where who which us".split(" "));
+const NEG=new Set(["not","no","never","none","without","cannot"]);
+const VERBS=new Set("make build create give write show use get need want help explain tell find run go see think learn read feel look take add fix design send open start stop turn keep let try ask say know put change check list compare plan test sat".split(" "));
+const lemma=w=>w.length>4?w.replace(/(ing|ed|es|s)$/,""):w;
+const isVerb=w=>{const l=lemma(w);return VERBS.has(w)||VERBS.has(l)||VERBS.has(l+"e")};
+const ROLE={action:"hsl(255 100% 76%)",concept:"hsl(92 70% 64%)",entity:"hsl(48 100% 66%)",negation:"hsl(2 100% 68%)",function:"#3A2A75",punct:"#3A2A75"};
+function meaning(text){
+  const toks=text.match(/[\p{L}\p{N}'’-]+|[^\s\p{L}\p{N}]/gu)||[];
+  const items=[];let cur=null;
+  toks.forEach((w,i)=>{
+    const lw=w.toLowerCase();let role;
+    if(!/[\p{L}\p{N}]/u.test(w))role="punct";
+    else if(NEG.has(lw))role="negation";
+    else if(STOP.has(lw))role="function";
+    else if(/^\d/.test(w)||(/^\p{Lu}/u.test(w)&&i>0&&!/^[.!?]$/.test(toks[i-1])))role="entity";
+    else if(isVerb(lw))role="action";
+    else role="concept";
+    const content=role==="concept"||role==="entity";
+    if(content&&cur){cur.t+=" "+w;if(role==="entity")cur.role="entity"}
+    else{const it={t:w,role};items.push(it);cur=content?it:null}
+  });
+  return items.map(it=>({t:it.t,role:it.role,key:(it.role==="action"||it.role==="concept")&&!it.t.includes(" ")?lemma(it.t.toLowerCase()):it.t.toLowerCase()}));
+}
+const TOK={
+  word:t=>(t.match(WORD)||[]).map(x=>({t:x,key:x})),
+  sub:t=>(t.match(WORD)||[]).flatMap(subword).map(x=>({t:x,key:x})),
+  mean:meaning,
+  char:t=>Array.from(t).map(c=>({t:c,key:c})),
+  byte:t=>Array.from(new TextEncoder().encode(t)).map(b=>{const h=b.toString(16).padStart(2,"0");return {t:h,key:h}})
+};
+function decode(algo,toks){
+  if(algo==="char")return toks.map(x=>x.t).join("");
+  if(algo==="byte")return new TextDecoder().decode(new Uint8Array(toks.map(x=>parseInt(x.t,16))));
+  return toks.map(x=>x.t).join(" ").replace(/ ##/g,"").replace(/ ([.,!?;:)\]}])/g,"$1").replace(/([(\[{]) /g,"$1").replace(/ (['’]) /g,"$1");
+}
+
+/* ---- Vocabulary ---- */
+const SPECIAL=["<pad>","<bos>","<eos>"];
+function buildVocab(toks){
+  const map=new Map();let next=SPECIAL.length;
+  toks.forEach((x,i)=>{
+    let v=map.get(x.key);
+    if(!v){v={key:x.key,id:next++,count:0,first:i};map.set(x.key,v)}
+    v.count++;x.id=v.id;
+  });
+  return map;
+}
+
+/* ---- 3D engine (canvas, no libraries) ---- */
+class View3D{
+  constructor(c,draw){
+    this.c=c;this.g=c.getContext("2d");this.draw=draw;this.ry=.6;this.rx=-.35;this.zoom=1;this.drag=null;this.mx=-1;this.my=-1;this.data=null;this.hot=-1;
+    this.auto=!matchMedia("(prefers-reduced-motion:reduce)").matches;
+    c.addEventListener("pointerdown",e=>{this.drag={x:e.clientX,y:e.clientY};c.setPointerCapture(e.pointerId)});
+    c.addEventListener("pointermove",e=>{const r=c.getBoundingClientRect();this.mx=e.clientX-r.left;this.my=e.clientY-r.top;
+      if(this.drag){this.ry+=(e.clientX-this.drag.x)*.008;this.rx=Math.max(-1.4,Math.min(1.4,this.rx+(e.clientY-this.drag.y)*.008));this.drag={x:e.clientX,y:e.clientY}}});
+    c.addEventListener("pointerup",()=>this.drag=null);
+    c.addEventListener("pointerleave",()=>{this.mx=-1;this.drag=null});
+    c.addEventListener("wheel",e=>{e.preventDefault();this.zoom=Math.max(.5,Math.min(2.5,this.zoom*(e.deltaY<0?1.1:.9)))},{passive:false});
+    const loop=()=>{this.frame();requestAnimationFrame(loop)};loop();
+  }
+  p(v){
+    const cy=Math.cos(this.ry),sy=Math.sin(this.ry),cx=Math.cos(this.rx),sx=Math.sin(this.rx);
+    const x1=v.x*cy+v.z*sy,z1=-v.x*sy+v.z*cy,y2=v.y*cx-z1*sx,z2=v.y*sx+z1*cx;
+    const s=700/(700+z2);
+    return {X:this.w/2+x1*s*this.zoom,Y:this.h/2+y2*s*this.zoom,z:z2,s};
+  }
+  frame(){
+    const c=this.c;if(!c.offsetParent)return;
+    const d=devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;
+    if(c.width!==Math.round(w*d)||c.height!==Math.round(h*d)){c.width=Math.round(w*d);c.height=Math.round(h*d)}
+    this.g.setTransform(d,0,0,d,0,0);this.g.clearRect(0,0,w,h);this.w=w;this.h=h;
+    if(this.auto&&!this.drag)this.ry+=.004;
+    if(this.data)this.draw(this);
+  }
+}
+const label=(g,t,x,y,size=13)=>{g.font=`700 ${size}px "Zen Maru Gothic",sans-serif`;g.textAlign="center";g.lineWidth=4;g.strokeStyle="#150B33";g.strokeText(t,x,y);g.fillStyle="#FFF6E9";g.fillText(t,x,y)};
+
+function drawNet(v){
+  const g=v.g,d=v.data,max=d.nodes[0].count;
+  const P=d.nodes.map(n=>{const q=v.p(n);q.r=(9+15*Math.sqrt(n.count/max))*q.s*Math.min(v.zoom,1.6);return q});
+  const order=P.map((_,i)=>i).sort((a,b)=>P[b].z-P[a].z);
+  v.hot=-1;
+  if(v.mx>=0)for(let k=order.length-1;k>=0;k--){const i=order[k];if(Math.hypot(v.mx-P[i].X,v.my-P[i].Y)<P[i].r+5){v.hot=i;break}}
+  d.edges.forEach(e=>{
+    const A=P[e.a],B=P[e.b],s=(A.s+B.s)/2,hot=v.hot===e.a||v.hot===e.b;
+    g.strokeStyle=hot?"#FFD84D":`rgba(54,241,224,${Math.min(.8,.2+.4*s)})`;
+    g.lineWidth=Math.min(7,1+e.w*.7)*s*(hot?1.6:1);
+    g.beginPath();g.moveTo(A.X,A.Y);g.lineTo(B.X,B.Y);g.stroke();
+  });
+  order.forEach(i=>{
+    const p=P[i],n=d.nodes[i],pc=PAL[hash(n.key)%6];
+    g.globalAlpha=Math.max(.5,Math.min(1,(p.s-.55)/.7));
+    g.shadowColor=`hsl(${pc[0]} 100% 65%)`;g.shadowBlur=i===v.hot?30:14;
+    g.fillStyle=`hsl(${pc[0]} ${pc[1]}% ${pc[2]}%)`;g.beginPath();g.arc(p.X,p.Y,p.r,0,7);g.fill();
+    g.shadowBlur=0;g.lineWidth=2.5;g.strokeStyle="#FFF6E9";g.stroke();
+    label(g,vis(n.key).slice(0,14),p.X,p.Y-p.r-7,i===v.hot?16:13);
+    g.globalAlpha=1;
+  });
+  if(v.hot>=0){const n=d.nodes[v.hot];g.textAlign="left";g.font='900 20px "Zen Maru Gothic"';g.fillStyle="#FFD84D";g.fillText(`${vis(n.key)}  ×${n.count}`,16,30)}
+}
+function drawTowers(v){
+  const g=v.g,floor=70;
+  g.strokeStyle="rgba(183,169,230,.35)";g.lineWidth=1;
+  for(let i=-200;i<=200;i+=50){
+    [[{x:i,y:floor,z:-200},{x:i,y:floor,z:200}],[{x:-200,y:floor,z:i},{x:200,y:floor,z:i}]].forEach(([a,b])=>{const A=v.p(a),B=v.p(b);g.beginPath();g.moveTo(A.X,A.Y);g.lineTo(B.X,B.Y);g.stroke()});
+  }
+  const boxes=v.data.map(b=>{
+    const hw=26,top=floor-b.h,cs=[[-1,floor,-1],[1,floor,-1],[1,floor,1],[-1,floor,1],[-1,top,-1],[1,top,-1],[1,top,1],[-1,top,1]].map(([a,y,e])=>v.p({x:b.x+a*hw,y,z:b.z+e*hw}));
+    return {b,cs,z:v.p({x:b.x,y:floor-b.h/2,z:b.z}).z,lab:v.p({x:b.x,y:top-12,z:b.z})};
+  }).sort((a,b)=>b.z-a.z);
+  const faces=[[4,5,6,7,10],[0,1,5,4,-6],[1,2,6,5,-12],[2,3,7,6,-6],[3,0,4,7,-14]];
+  boxes.forEach(o=>{
+    const pc=PAL[hash(o.b.key)%6];
+    faces.map(f=>({f,z:f.slice(0,4).reduce((s,i)=>s+o.cs[i].z,0)})).sort((a,b)=>b.z-a.z).forEach(({f})=>{
+      g.fillStyle=`hsl(${pc[0]} ${pc[1]}% ${Math.max(25,pc[2]+f[4])}%)`;g.strokeStyle="#150B33";g.lineWidth=2;
+      g.beginPath();f.slice(0,4).forEach((i,k)=>k?g.lineTo(o.cs[i].X,o.cs[i].Y):g.moveTo(o.cs[i].X,o.cs[i].Y));g.closePath();g.fill();g.stroke();
+    });
+    label(g,vis(o.b.key).slice(0,10),o.lab.X,o.lab.Y-14,13);
+    g.font='900 15px "Zen Maru Gothic"';g.fillStyle="#FFD84D";g.textAlign="center";g.fillText("×"+o.b.count,o.lab.X,o.lab.Y);
+  });
+}
+const V1=new View3D($("#c1"),drawNet),V2=new View3D($("#c2"),drawTowers);
+V2.rx=-.5;
+
+function buildNet(toks,vocab,win){
+  const top=[...vocab.values()].sort((a,b)=>b.count-a.count).filter(v=>v.key.trim()).slice(0,18);
+  if(top.length<2){V1.data=null;return}
+  const idx=new Map(top.map((v,i)=>[v.key,i])),em=new Map();
+  for(let i=0;i<toks.length;i++){
+    const a=idx.get(toks[i].key);if(a===undefined)continue;
+    for(let k=1;k<=win&&i+k<toks.length;k++){
+      const b=idx.get(toks[i+k].key);if(b===undefined||b===a)continue;
+      const key=a<b?a+"-"+b:b+"-"+a;em.set(key,(em.get(key)||0)+1);
+    }
+  }
+  const n=top.length,E=[...em].map(([k,w])=>{const [a,b]=k.split("-").map(Number);return {a,b,w}});
+  const P=top.map((_,i)=>{const y=1-2*(i+.5)/n,r=Math.sqrt(1-y*y),t=i*2.399963;return {x:140*r*Math.cos(t),y:140*y,z:140*r*Math.sin(t),dx:0,dy:0,dz:0}});
+  for(let it=0;it<320;it++){
+    const cool=1-it/320;
+    P.forEach(p=>{p.dx=-p.x*.012;p.dy=-p.y*.012;p.dz=-p.z*.012});
+    for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){
+      const dx=P[i].x-P[j].x,dy=P[i].y-P[j].y,dz=P[i].z-P[j].z,d2=dx*dx+dy*dy+dz*dz+.01,d=Math.sqrt(d2),f=9000/d2;
+      P[i].dx+=dx/d*f;P[i].dy+=dy/d*f;P[i].dz+=dz/d*f;P[j].dx-=dx/d*f;P[j].dy-=dy/d*f;P[j].dz-=dz/d*f;
+    }
+    E.forEach(e=>{
+      const A=P[e.a],B=P[e.b],dx=B.x-A.x,dy=B.y-A.y,dz=B.z-A.z,d=Math.sqrt(dx*dx+dy*dy+dz*dz)+.01,f=(d-85)*.02*Math.min(e.w,4);
+      A.dx+=dx/d*f;A.dy+=dy/d*f;A.dz+=dz/d*f;B.dx-=dx/d*f;B.dy-=dy/d*f;B.dz-=dz/d*f;
+    });
+    P.forEach(p=>{p.x+=p.dx*cool*2;p.y+=p.dy*cool*2;p.z+=p.dz*cool*2});
+  }
+  V1.data={nodes:top.map((v,i)=>({key:v.key,count:v.count,x:P[i].x,y:P[i].y,z:P[i].z})),edges:E};
+}
+function buildTowers(vocab){
+  const top=[...vocab.values()].sort((a,b)=>b.count-a.count).filter(v=>v.key.trim()).slice(0,12);
+  if(!top.length){V2.data=null;return}
+  const max=top[0].count;
+  V2.data=top.map((v,i)=>({key:v.key,count:v.count,x:(i%4-1.5)*90,z:(Math.floor(i/4)-1)*90,h:24+v.count/max*150}));
+}
+function lengthChart(toks){
+  if(!toks.length)return '<p class="empty">No data yet.</p>';
+  const cap=12,c=Array(cap+1).fill(0);
+  toks.forEach(x=>{const l=Array.from(x.t.replace(/^##/,"")).length;c[Math.min(l,cap)]++});
+  const max=Math.max(...c),W=620,H=190,bw=(W-60)/cap;let s="";
+  for(let l=1;l<=cap;l++){const v=c[l],bh=(v/max)*130,x=40+(l-1)*bw;
+    s+=`<rect x="${x+4}" y="${150-bh}" width="${bw-8}" height="${bh}" rx="4" fill="${PAL[l%6]?`hsl(${PAL[l%6][0]} 100% 70%)`:"#fff"}" stroke="#150B33" stroke-width="2"><title>${l}${l===cap?"+":""} chars: ${v} tokens</title></rect><text x="${x+bw/2}" y="170" text-anchor="middle">${l===cap?cap+"+":l}</text><text x="${x+bw/2}" y="${144-bh}" text-anchor="middle">${v||""}</text>`}
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Histogram of token lengths">${s}<text x="${W/2}" y="187" text-anchor="middle" style="fill:#B7A9E6">token length in characters</text></svg>`;
+}
+
+/* ---- App ---- */
+let vocabRows=[],lastIds=[];
+function renderVocab(){
+  const sort=$("#sort").value,f=$("#filter").value.toLowerCase();
+  let rows=vocabRows.filter(v=>v.key.toLowerCase().includes(f));
+  if(sort==="count")rows.sort((a,b)=>b.count-a.count||a.id-b.id);
+  if(sort==="alpha")rows.sort((a,b)=>a.key.localeCompare(b.key));
+  if(sort==="id")rows.sort((a,b)=>a.id-b.id);
+  const total=vocabRows.reduce((s,v)=>s+v.count,0)||1,max=Math.max(1,...vocabRows.map(v=>v.count));
+  const sp=SPECIAL.map((k,i)=>`<tr><td class="m">${i}</td><td class="m" style="color:var(--mute)">${esc(k)}</td><td>–</td><td>special</td></tr>`).join("");
+  $("#vbody").innerHTML=(f?"":sp)+rows.slice(0,500).map(v=>`<tr><td class="m">${v.id}</td><td class="m"><span style="background:${col(v.key)};color:#1A0E3D;padding:1px 8px;border-radius:6px">${esc(vis(v.key))}</span></td><td class="m">${v.count}</td><td><span class="share" style="width:${Math.max(3,v.count/max*90)}px"></span>${(v.count/total*100).toFixed(1)}%</td></tr>`).join("");
+  $("#vcount").textContent=`${vocabRows.length} unique tokens${rows.length>500?" (showing 500)":""}`;
+}
+function run(){
+  const raw=$("#inp").value,algo=$("#algo").value,norm=normalize(raw,$("#low").checked);
+  $("#s1").textContent=raw.length;$("#s2").textContent=norm.length;
+  const toks=norm?TOK[algo](norm):[];
+  const vocab=buildVocab(toks);
+  vocabRows=[...vocab.values()];
+  const withSpec=$("#spec").checked;
+  lastIds=toks.map(x=>x.id);if(withSpec&&toks.length)lastIds=[1,...lastIds,2];
+  $("#s3").textContent=toks.length;$("#s4").textContent=vocab.size;
+  if(!toks.length){$("#toks").innerHTML='<span class="empty">Type something above.</span>';$("#out").textContent="";$("#stats").innerHTML="";$("#ids").textContent="";$("#s5").textContent="–"}
+  else{
+    const sp=k=>`<span class="t fn" style="background:#3A2A75"><b>&lt;${k}&gt;</b><i>${k==="bos"?1:2}</i></span>`;
+    $("#toks").innerHTML=(withSpec?sp("bos"):"")+toks.map(x=>{const dim=x.role==="function"||x.role==="punct";return `<span class="t ${dim?"fn":""}" style="background:${x.role?ROLE[x.role]:col(x.key)}" title="ID ${x.id}"><b>${esc(vis(x.t))}</b>${x.role?`<small>${x.role}</small>`:""}<i>${x.id}</i></span>`}).join("")+(withSpec?sp("eos"):"");
+    $("#ids").textContent="["+lastIds.join(", ")+"]";
+    const dec=decode(algo,toks);
+    const ok=algo==="mean"?true:(algo==="char"||algo==="byte"?dec===norm:dec.replace(/\s/g,"")===norm.replace(/\s/g,""));
+    $("#out").textContent=dec;
+    const top=[...vocabRows].sort((a,b)=>b.count-a.count)[0],longest=toks.reduce((m,x)=>x.t.length>m.length?x.t:m,"");
+    $("#stats").innerHTML=`<dt>Tokens</dt><dd>${toks.length}</dd><dt>Unique</dt><dd>${vocab.size}</dd><dt>Unique ratio</dt><dd>${(vocab.size/toks.length).toFixed(2)}</dd><dt>Chars / token</dt><dd>${(norm.length/toks.length).toFixed(2)}</dd><dt>Seen once</dt><dd>${vocabRows.filter(v=>v.count===1).length}</dd><dt>Most common</dt><dd>${esc(vis(top.key))} (${top.count})</dd><dt>Longest</dt><dd>${esc(longest)}</dd><dt>Round trip</dt><dd>${algo==="mean"?"lossy by design":ok?"matches input":"differs"}</dd>`;
+    $("#s5").textContent=algo==="mean"?"~":ok?"OK":"~";
+  }
+  renderVocab();buildNet(toks,vocab,+$("#win").value);buildTowers(vocab);$("#g3").innerHTML=lengthChart(toks);
+}
+[0,1,2].forEach(i=>$("#tb"+i).onclick=()=>[0,1,2].forEach(j=>{$("#tb"+j).setAttribute("aria-selected",i===j);$("#p"+j).hidden=i!==j}));
+["inp","algo","low","spec","win"].forEach(i=>$("#"+i).addEventListener("input",run));
+$("#sort").addEventListener("input",renderVocab);$("#filter").addEventListener("input",renderVocab);
+$("#spin").onclick=()=>{V1.auto=V2.auto=!V1.auto};
+$("#copy").onclick=async()=>{try{await navigator.clipboard.writeText("["+lastIds.join(", ")+"]");$("#copy").textContent="Copied"}catch(e){$("#copy").textContent="Copy failed"}setTimeout(()=>$("#copy").textContent="Copy ID list",1200)};
+$("#csv").onclick=()=>{
+  const q=s=>'"'+String(s).replace(/"/g,'""')+'"';
+  const csv="id,token,count\n"+SPECIAL.map((k,i)=>`${i},${q(k)},0`).join("\n")+"\n"+[...vocabRows].sort((a,b)=>a.id-b.id).map(v=>`${v.id},${q(v.key)},${v.count}`).join("\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="vocabulary.csv";a.click();URL.revokeObjectURL(a.href);
+};
+run();
+</script>
+</body>
+</html>
